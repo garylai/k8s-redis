@@ -1,0 +1,60 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: redis
+  creationTimestamp: 
+  labels:
+    run: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: redis
+  template:
+    metadata:
+      creationTimestamp: 
+      labels:
+        run: redis
+    spec:
+      containers:
+      - name: redis
+        image: garylai/redis-singular:latest
+        ports:
+        - containerPort: 6379
+          hostIP: 0.0.0.0
+        volumeMounts:
+        - name: data-volume
+          mountPath: "/data"
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: redis-claim
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-service
+  creationTimestamp: 
+  labels:
+    run: redis
+spec:
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
+  selector:
+    run: redis
+  type: ClusterIP
+
