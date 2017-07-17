@@ -1,8 +1,25 @@
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis
+  labels:
+    run: redis
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: 'true'
+spec:
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
+  selector:
+    run: redis
+  clusterIP: None
+---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: redis-claim
+  name: redis-ss-pvc
 spec:
   accessModes:
   - ReadWriteOnce
@@ -10,15 +27,15 @@ spec:
     requests:
       storage: 5Gi
 ---
-kind: Deployment
-apiVersion: extensions/v1beta1
+kind: StatefulSet
+apiVersion: apps/v1beta1
 metadata:
   name: redis
-  creationTimestamp: 
   labels:
     run: redis
 spec:
-  replicas: 1
+  serviceName: redis
+  replicas: 3
   selector:
     matchLabels:
       run: redis
@@ -30,31 +47,17 @@ spec:
     spec:
       containers:
       - name: redis
-        image: garylai/redis-singular:latest
+        image: garylai/k8s-redis:latest
         ports:
         - containerPort: 6379
           hostIP: 0.0.0.0
         volumeMounts:
         - name: data-volume
           mountPath: "/data"
+        args:
+        - redis
+      restartPolicy: Always
       volumes:
       - name: data-volume
         persistentVolumeClaim:
-          claimName: redis-claim
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: redis-service
-  creationTimestamp: 
-  labels:
-    run: redis
-spec:
-  ports:
-  - protocol: TCP
-    port: 6379
-    targetPort: 6379
-  selector:
-    run: redis
-  type: ClusterIP
-
+          claimName: redis-ss-pvc

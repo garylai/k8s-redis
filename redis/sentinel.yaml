@@ -1,0 +1,45 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-sentinel
+  labels:
+    run: redis-sentinel
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: 'true'
+spec:
+  ports:
+  - protocol: TCP
+    port: 26379
+    targetPort: 26379
+  selector:
+    run: redis-sentinel
+  clusterIP: None
+---
+kind: StatefulSet
+apiVersion: apps/v1beta1
+metadata:
+  name: redis-sentinel
+  labels:
+    run: redis-sentinel
+spec:
+  serviceName: redis-sentinel
+  replicas: 3
+  selector:
+    matchLabels:
+      run: redis-sentinel
+  template:
+    metadata:
+      creationTimestamp: 
+      labels:
+        run: redis-sentinel
+    spec:
+      containers:
+      - name: redis-sentinel
+        image: garylai/k8s-redis:latest
+        ports:
+        - containerPort: 26379
+          hostIP: 0.0.0.0
+        args:
+        - sentinel
+      restartPolicy: Always
