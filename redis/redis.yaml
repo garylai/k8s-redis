@@ -16,17 +16,6 @@ spec:
     run: redis
   clusterIP: None
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: redis-ss-pvc
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
 kind: StatefulSet
 apiVersion: apps/v1beta1
 metadata:
@@ -57,7 +46,12 @@ spec:
         args:
         - redis
       restartPolicy: Always
-      volumes:
-      - name: data-volume
-        persistentVolumeClaim:
-          claimName: redis-ss-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: data-volume
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
