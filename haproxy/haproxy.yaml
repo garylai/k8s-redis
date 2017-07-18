@@ -1,4 +1,21 @@
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-haproxy-stats
+  labels:
+    run: redis-haproxy
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: 'true'
+spec:
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  selector:
+    run: redis-haproxy
+  type: NodePort
+---
 kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
@@ -21,6 +38,8 @@ spec:
         image: garylai/k8s-redis-haproxy:latest
         ports:
         - containerPort: 6379
+          hostIP: 0.0.0.0
+        - containerPort: 8080
           hostIP: 0.0.0.0
         args:
         - '3'
