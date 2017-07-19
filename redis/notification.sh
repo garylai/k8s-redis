@@ -7,15 +7,12 @@ description="$2"
 role=$(echo $description | awk '{print $1}')
 
 call_curl () {
-    echo in call_curl
     scope=$1
     addr=$2
     action=$3    
     host_name=$(curl -s "http://$haproxy_host:8080/;csv?scope=$scope" | \
                        grep $addr | \
                        awk -F, '{print $2}')
-
-    echo $scope $haproxy_host $host_name
     
     curl -s "http://$haproxy_host:8080/?scope=$scope" -o /dev/null \
          --data "s=$host_name&action=$action&b=%234"
